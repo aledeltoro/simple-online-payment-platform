@@ -11,7 +11,7 @@ type TransactionType string
 
 var (
 	// TransactionStatusSucceeded status for succeeded transaction
-	TransactionStatusSucceeded TransactionStatus = "pending"
+	TransactionStatusSucceeded TransactionStatus = "succeeded"
 	// TransactionStatusFailure status for failed transaction
 	TransactionStatusFailure TransactionStatus = "failure"
 	// TransactionStatusPending status for pending transaction
