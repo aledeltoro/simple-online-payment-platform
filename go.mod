@@ -3,6 +3,7 @@ module github.com/aledeltoro/simple-online-payment-platform
 go 1.21.5
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-chi/chi/v5 v5.0.11 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -10,6 +11,7 @@ require (
 	github.com/jackc/pgx/v5 v5.5.3 // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/oklog/ulid/v2 v2.1.0 // indirect
+	github.com/pashagolub/pgxmock/v3 v3.3.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
