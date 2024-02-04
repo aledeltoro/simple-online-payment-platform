@@ -34,6 +34,8 @@ func New() (paymentservice.PaymentService, error) {
 
 // PerformTransaction method to perform a transaction
 func (s stripeService) PerformTransaction(input *models.TransactionInput) (*models.Transaction, error) {
+	transactionID := fmt.Sprintf("TXN_%s", ulid.Make().String())
+
 	params := &stripe.PaymentIntentParams{
 		Amount:        stripe.Int64(input.Amount),
 		Currency:      stripe.String(input.Currency),
@@ -43,6 +45,9 @@ func (s stripeService) PerformTransaction(input *models.TransactionInput) (*mode
 		AutomaticPaymentMethods: &stripe.PaymentIntentAutomaticPaymentMethodsParams{
 			AllowRedirects: stripe.String("never"),
 			Enabled:        stripe.Bool(true),
+		},
+		Metadata: map[string]string{
+			"transaction_id": transactionID,
 		},
 	}
 
@@ -54,8 +59,8 @@ func (s stripeService) PerformTransaction(input *models.TransactionInput) (*mode
 
 	// Card error should be handled here, if found, we should return a normal transaction object
 	transaction := &models.Transaction{
-		TransactionID: fmt.Sprintf("TXN_%s", ulid.Make().String()),
-		Status:        models.TransactionStatusSucceeded,
+		TransactionID: transactionID,
+		Status:        models.TransactionStatusPending,
 		Description:   result.Description,
 		Provider:      models.PaymentProviderStripe,
 		Amount:        int(result.Amount),
