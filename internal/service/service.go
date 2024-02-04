@@ -1,16 +1,24 @@
-package handler
+package service
 
 import (
+	"context"
+	"errors"
+	"fmt"
+
 	"github.com/aledeltoro/simple-online-payment-platform/internal/database"
 	"github.com/aledeltoro/simple-online-payment-platform/internal/models"
 	"github.com/aledeltoro/simple-online-payment-platform/internal/paymentservice"
 )
 
+var (
+	ErrMissingTransactionID = errors.New("missing transaction id")
+)
+
 // OnlinePaymentService interface to implement business logic for the online payment platform
 type OnlinePaymentService interface {
-	ProcessPayment(input *models.TransactionInput) (*models.Transaction, error)
-	QueryPayment(transactionID string) (*models.Transaction, error)
-	RefundPayment(transactionID string) (*models.Transaction, error)
+	ProcessPayment(ctx context.Context, amount int64, currency, paymentMethod, description string) (*models.Transaction, error)
+	QueryPayment(ctx context.Context, transactionID string) (*models.Transaction, error)
+	RefundPayment(ctx context.Context, transactionID string) (*models.Transaction, error)
 }
 
 type onlinePaymentService struct {
@@ -25,14 +33,54 @@ func NewOnlinePaymentService(database database.Database, paymentProcessor paymen
 	}
 }
 
-func (o onlinePaymentService) ProcessPayment(input *models.TransactionInput) (*models.Transaction, error) {
-	return nil, nil
+func (o onlinePaymentService) ProcessPayment(ctx context.Context, amount int64, currency, paymentMethod, description string) (*models.Transaction, error) {
+	input := &models.TransactionInput{
+		Amount:        amount,
+		Currency:      currency,
+		PaymentMethod: paymentMethod,
+		Description:   description,
+	}
+
+	err := input.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	transaction, err := o.paymentProcessor.PerformTransaction(input)
+	if err != nil {
+		return nil, fmt.Errorf("performing transaction: %w", err)
+	}
+
+	err = o.database.InsertTransaction(ctx, transaction)
+	if err != nil {
+		return nil, fmt.Errorf("inserting transaction: %w", err)
+	}
+
+	return transaction, nil
 }
 
-func (o onlinePaymentService) QueryPayment(transactionID string) (*models.Transaction, error) {
-	return nil, nil
+func (o onlinePaymentService) QueryPayment(ctx context.Context, transactionID string) (*models.Transaction, error) {
+	if transactionID == "" {
+		return nil, ErrMissingTransactionID
+	}
+
+	return o.database.GetTransaction(ctx, transactionID)
 }
 
-func (o onlinePaymentService) RefundPayment(transactionID string) (*models.Transaction, error) {
-	return nil, nil
+func (o onlinePaymentService) RefundPayment(ctx context.Context, transactionID string) (*models.Transaction, error) {
+	if transactionID == "" {
+		return nil, ErrMissingTransactionID
+	}
+
+	refundedTransaction, err := o.paymentProcessor.RefundTransaction(transactionID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = o.database.UpdateTransaction(ctx, transactionID, refundedTransaction)
+	if err != nil {
+		return nil, err
+	}
+
+	return o.database.GetTransaction(ctx, transactionID)
 }
