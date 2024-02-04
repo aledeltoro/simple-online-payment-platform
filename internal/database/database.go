@@ -15,5 +15,6 @@ var (
 type Database interface {
 	InsertTransaction(context.Context, *models.Transaction) error
 	GetTransaction(ctx context.Context, transactionID string) (*models.Transaction, error)
+	UpdateTransaction(ctx context.Context, transactionID string, updatedTransaction *models.Transaction) error
 	Close()
 }

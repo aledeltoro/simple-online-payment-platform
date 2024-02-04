@@ -86,3 +86,44 @@ func TestGetTransaction(t *testing.T) {
 	c.NoError(err)
 	c.NotNil(transaction)
 }
+
+func TestUpdateTransaction(t *testing.T) {
+	c := require.New(t)
+
+	mock, err := pgxmock.NewPool()
+	c.NoError(err)
+
+	defer mock.Close()
+
+	marshalledAdditionalFields, err := json.Marshal(map[string]interface{}{
+		"charge_id": "ch_123",
+	})
+	c.NoError(err)
+
+	rows := mock.NewRows([]string{"transaction_id", "type", "additional_fields"})
+	rows.AddRow("TXN123", models.TransactionTypeCharge, string(marshalledAdditionalFields))
+
+	query := `
+	UPDATE transactions_history
+	SET
+		type = $1,
+		additional_fields = $2
+	WHERE transaction_id = $3
+	RETURN *`
+
+	transaction := &models.Transaction{
+		TransactionID: "TXN123",
+		Type:          models.TransactionTypeRefund,
+		AdditionalFields: map[string]interface{}{
+			"charge_id": "ch_123",
+			"refund_id": "rf_123",
+		},
+	}
+
+	mock.ExpectExec(regexp.QuoteMeta(query)).WithArgs(transaction.Type, transaction.AdditionalFields, transaction.TransactionID).WillReturnResult(pgxmock.NewResult("1", 1))
+
+	service := postgresService{pool: mock}
+
+	err = service.UpdateTransaction(context.Background(), "TXN123", transaction)
+	c.NoError(err)
+}

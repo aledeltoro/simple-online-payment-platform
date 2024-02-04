@@ -112,3 +112,21 @@ func (p postgresService) GetTransaction(ctx context.Context, transactionID strin
 
 	return &transaction, nil
 }
+
+func (p postgresService) UpdateTransaction(ctx context.Context, transactionID string, updatedTransaction *models.Transaction) error {
+	query := `
+	UPDATE transactions_history
+	SET
+		type = $1,
+		additional_fields = $2
+	WHERE transaction_id = $3
+	RETURN *
+	`
+
+	_, err := p.pool.Exec(ctx, query, updatedTransaction.Type, updatedTransaction.AdditionalFields, updatedTransaction.TransactionID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
