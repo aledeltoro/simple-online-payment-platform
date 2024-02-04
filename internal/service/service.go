@@ -72,7 +72,12 @@ func (o onlinePaymentService) RefundPayment(ctx context.Context, transactionID s
 		return nil, ErrMissingTransactionID
 	}
 
-	refundedTransaction, err := o.paymentProcessor.RefundTransaction(transactionID)
+	transaction, err := o.database.GetTransaction(ctx, transactionID)
+	if err != nil {
+		return nil, err
+	}
+
+	refundedTransaction, err := o.paymentProcessor.RefundTransaction(transaction.AdditionalFields)
 	if err != nil {
 		return nil, err
 	}

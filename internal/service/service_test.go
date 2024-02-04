@@ -123,7 +123,7 @@ func TestRefundPayment(t *testing.T) {
 		},
 	}
 
-	mockPaymentProcessor.On("RefundTransaction", "TXN_123").Return(refundedTransaction, nil)
+	mockPaymentProcessor.On("RefundTransaction", expectedTransaction.AdditionalFields).Return(refundedTransaction, nil)
 	mockDatabase.On("UpdateTransaction", context.Background(), "TXN_123", refundedTransaction).Return(nil)
 	mockDatabase.On("GetTransaction", context.Background(), "TXN_123").Return(expectedTransaction, nil)
 
