@@ -87,9 +87,9 @@ func TestRefundTransaction(t *testing.T) {
 
 	mockService := MockStripe{}
 
-	mockService.On("RefundTransaction", "charge_id").Return(expectedTransaction, nil)
+	mockService.On("RefundTransaction", expectedTransaction.AdditionalFields).Return(expectedTransaction, nil)
 
-	updatedTransaction, err := mockService.RefundTransaction("charge_id")
+	updatedTransaction, err := mockService.RefundTransaction(expectedTransaction.AdditionalFields)
 	c.NoError(err)
 	c.Equal(expectedTransaction, updatedTransaction)
 }

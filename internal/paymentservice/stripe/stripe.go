@@ -79,7 +79,12 @@ func (s stripeService) QueryTransaction(id string) (*models.Transaction, error) 
 	return nil, nil
 }
 
-func (s stripeService) RefundTransaction(chargeID string) (*models.Transaction, error) {
+func (s stripeService) RefundTransaction(metadata map[string]interface{}) (*models.Transaction, error) {
+	chargeID, ok := metadata["charge_id"].(string)
+	if !ok {
+		return nil, fmt.Errorf("missing charge_id")
+	}
+
 	params := &stripe.RefundParams{
 		Charge: stripe.String(chargeID),
 	}

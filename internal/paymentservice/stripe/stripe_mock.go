@@ -29,8 +29,8 @@ func (m *MockStripe) QueryTransaction(id string) (*models.Transaction, error) {
 }
 
 // RefundTransaction mock implementation
-func (m *MockStripe) RefundTransaction(id string) (*models.Transaction, error) {
-	args := m.Called(id)
+func (m *MockStripe) RefundTransaction(metadata map[string]interface{}) (*models.Transaction, error) {
+	args := m.Called(metadata)
 
 	return args.Get(0).(*models.Transaction), args.Error(1)
 }
