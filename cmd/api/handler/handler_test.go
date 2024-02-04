@@ -47,7 +47,7 @@ func TestHandleProcessPayment(t *testing.T) {
 	router := chi.NewRouter()
 	router.Post("/payments", http.HandlerFunc(handler.HandleProcessPayment(context.Background())))
 
-	req := httptest.NewRequest(http.MethodPost, "/payment", strings.NewReader(form.Encode()))
+	req := httptest.NewRequest(http.MethodPost, "/payments", strings.NewReader(form.Encode()))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	recorder := httptest.NewRecorder()

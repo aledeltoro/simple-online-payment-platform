@@ -1,23 +1,63 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
+	"github.com/aledeltoro/simple-online-payment-platform/cmd/api/handler"
+	"github.com/aledeltoro/simple-online-payment-platform/internal/database/postgres"
+	"github.com/aledeltoro/simple-online-payment-platform/internal/paymentservice/stripe"
+	"github.com/aledeltoro/simple-online-payment-platform/internal/service"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("loading .env file: %s", err.Error())
+	}
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3000"
+	}
+
+	ctx := context.Background()
+
+	database, err := postgres.Init(ctx)
+	if err != nil {
+		log.Fatalf("initializing database: %s \n", err.Error())
+	}
+
+	defer database.Close()
+
+	paymentprocessor, err := stripe.New()
+	if err != nil {
+		log.Fatalf("initializing stripe payment processor: %s \n", err.Error())
+	}
+
+	onlinePaymentService := service.NewOnlinePaymentService(database, paymentprocessor)
+
+	handler := handler.NewHandler(onlinePaymentService)
+
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello World!"))
 	})
+	r.Route("/payments", func(r chi.Router) {
+		r.Post("/", http.HandlerFunc(handler.HandleProcessPayment(ctx)))
+		r.Get("/{id}", http.HandlerFunc(handler.HandleQueryPayment(ctx)))
+		r.Post("/{id}/refunds", http.HandlerFunc(handler.HandleRefundPayment(ctx)))
+	})
 
-	fmt.Println("Listening on port 8080")
+	fmt.Printf("Listening on port %s \n", port)
 
-	log.Fatalln(http.ListenAndServe(":8080", r))
+	log.Fatalln(http.ListenAndServe(fmt.Sprintf(":%s", port), r))
 }
