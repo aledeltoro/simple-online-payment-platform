@@ -2,9 +2,9 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/aledeltoro/simple-online-payment-platform/internal/database"
@@ -28,7 +28,14 @@ type postgresService struct {
 
 // Init initializes PostgreSQL implementation
 func Init(ctx context.Context) (database.Database, error) {
-	pool, err := pgxpool.New(ctx, os.Getenv("CONNECTION_URL"))
+	host := os.Getenv("DATABASE_HOST")
+	port := os.Getenv("DATABASE_PORT")
+	user := os.Getenv("DATABASE_USER")
+	databaseName := os.Getenv("DATABASE_NAME")
+
+	connectionString := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable", host, port, user, databaseName)
+
+	pool, err := pgxpool.New(ctx, connectionString)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +102,7 @@ func (p postgresService) GetTransaction(ctx context.Context, transactionID strin
 		&transaction.Type,
 		&additionalFieldsJSON,
 	)
-	if errors.Is(err, sql.ErrNoRows) {
+	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, database.ErrTransactionNotFound
 	}
 
@@ -118,7 +125,7 @@ func (p postgresService) UpdateTransaction(ctx context.Context, transactionID st
 	UPDATE transactions_history
 	SET
 		type = COALESCE($1, type),
-		additional_fields = COALESCE($2, additional_fields),
+		additional_fields = COALESCE($2, additional_fields)
 	WHERE transaction_id = $3
 	`
 
