@@ -22,7 +22,7 @@ func main() {
 		log.Fatalf("loading .env file: %s", err.Error())
 	}
 
-	port := os.Getenv("PORT")
+	port := os.Getenv("API_PORT")
 	if port == "" {
 		port = "3000"
 	}

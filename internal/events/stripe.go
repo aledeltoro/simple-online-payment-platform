@@ -68,7 +68,8 @@ func (e *stripeEvents) ProcessEvent(ctx context.Context) error {
 		}
 
 		transaction.TransactionID = paymentIntent.Metadata["transaction_id"]
-		transaction.Type = models.TransactionType(paymentIntent.Status)
+		transaction.Status = models.TransactionStatus(paymentIntent.Status)
+		transaction.Type = models.TransactionTypeCharge
 
 	case stripe.EventTypeChargeRefunded:
 		var charge *stripe.Charge
@@ -79,7 +80,8 @@ func (e *stripeEvents) ProcessEvent(ctx context.Context) error {
 		}
 
 		transaction.TransactionID = charge.Metadata["transaction_id"]
-		transaction.Type = models.TransactionType(charge.Status)
+		transaction.Status = models.TransactionStatus(charge.Status)
+		transaction.Type = models.TransactionTypeRefund
 	}
 
 	err := e.database.UpdateTransaction(ctx, transaction.TransactionID, transaction)

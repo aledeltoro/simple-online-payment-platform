@@ -124,12 +124,13 @@ func (p postgresService) UpdateTransaction(ctx context.Context, transactionID st
 	query := `
 	UPDATE transactions_history
 	SET
-		type = COALESCE($1, type),
-		additional_fields = COALESCE($2, additional_fields)
-	WHERE transaction_id = $3
+		status = COALESCE($1, status),
+		type = COALESCE($2, type),
+		additional_fields = COALESCE($3, additional_fields)
+	WHERE transaction_id = $4
 	`
 
-	_, err := p.pool.Exec(ctx, query, updatedTransaction.Type, updatedTransaction.AdditionalFields, updatedTransaction.TransactionID)
+	_, err := p.pool.Exec(ctx, query, updatedTransaction.Status, updatedTransaction.Type, updatedTransaction.AdditionalFields, transactionID)
 	if err != nil {
 		return err
 	}

@@ -95,7 +95,7 @@ func (s stripeService) RefundTransaction(metadata map[string]interface{}) (*mode
 	}
 
 	transaction := &models.Transaction{
-		Status: models.TransactionStatusSucceeded,
+		Status: models.TransactionStatusPending,
 		Type:   models.TransactionTypeRefund,
 		AdditionalFields: map[string]interface{}{
 			"charge_id":         result.Charge.ID,
