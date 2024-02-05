@@ -130,7 +130,7 @@ func (p postgresService) GetTransaction(ctx context.Context, transactionID strin
 }
 
 // UpdateTransaction updates an item given its ID
-func (p postgresService) UpdateTransaction(ctx context.Context, transactionID string, updatedTransaction *models.Transaction) error {
+func (p postgresService) UpdateTransaction(ctx context.Context, transactionID string, updatedTransaction *models.Transaction) (*models.Transaction, error) {
 	query := `
 	UPDATE transactions_history
 	SET
@@ -138,16 +138,35 @@ func (p postgresService) UpdateTransaction(ctx context.Context, transactionID st
 		type = COALESCE($2, type),
 		additional_fields = COALESCE($3, additional_fields)
 	WHERE transaction_id = $4
+	RETURNING *
 	`
 
-	result, err := p.pool.Exec(ctx, query, updatedTransaction.Status, updatedTransaction.Type, updatedTransaction.AdditionalFields, transactionID)
+	row := p.pool.QueryRow(ctx, query, updatedTransaction.Status, updatedTransaction.Type, updatedTransaction.AdditionalFields, transactionID)
+
+	var transaction models.Transaction
+	var additionalFieldsJSON string
+
+	err := row.Scan(
+		&transaction.TransactionID,
+		&transaction.Status,
+		&transaction.Description,
+		&transaction.FailureReason,
+		&transaction.Provider,
+		&transaction.Amount,
+		&transaction.Currency,
+		&transaction.Type,
+		&additionalFieldsJSON,
+	)
 	if err != nil {
-		return fmt.Errorf("execute query failed: %w", err)
+		return nil, fmt.Errorf("update and scan row failed: %w", err)
 	}
 
-	if result.RowsAffected() != 1 {
-		return database.ErrMultipleRowsAffected
+	if additionalFieldsJSON != "" {
+		err = json.Unmarshal([]byte(additionalFieldsJSON), &transaction.AdditionalFields)
+		if err != nil {
+			return nil, fmt.Errorf("unmarshal value failed: %w", err)
+		}
 	}
 
-	return nil
+	return &transaction, nil
 }

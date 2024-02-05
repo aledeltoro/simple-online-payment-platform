@@ -228,9 +228,13 @@ func TestUpdateTransaction(t *testing.T) {
 
 	defer mock.Close()
 
-	transaction := &models.Transaction{
+	expectedTransaction := &models.Transaction{
 		TransactionID: "TXN_123",
 		Status:        models.TransactionStatusSucceeded,
+		Description:   "Sample description",
+		Amount:        2000,
+		Provider:      models.PaymentProviderStripe,
+		Currency:      "usd",
 		Type:          models.TransactionTypeRefund,
 		AdditionalFields: map[string]interface{}{
 			"charge_id": "ch_123",
@@ -238,17 +242,22 @@ func TestUpdateTransaction(t *testing.T) {
 		},
 	}
 
-	marshalledAdditionalFields, err := json.Marshal(transaction.AdditionalFields)
+	marshalledAdditionalFields, err := json.Marshal(expectedTransaction.AdditionalFields)
 	c.NoError(err)
 
-	columns := []string{"transaction_id", "status", "type", "additional_fields"}
+	columns := []string{"transaction_id", "status", "description", "failure_reason", "provider", "amount", "currency", "type", "additional_fields"}
 
 	rows := mock.NewRows(columns)
 
 	rows.AddRow(
-		transaction.TransactionID,
-		transaction.Status,
-		transaction.Type,
+		expectedTransaction.TransactionID,
+		expectedTransaction.Status,
+		expectedTransaction.Description,
+		expectedTransaction.FailureReason,
+		expectedTransaction.Provider,
+		expectedTransaction.Amount,
+		expectedTransaction.Currency,
+		expectedTransaction.Type,
 		string(marshalledAdditionalFields),
 	)
 
@@ -260,60 +269,13 @@ func TestUpdateTransaction(t *testing.T) {
 		additional_fields = COALESCE($3, additional_fields)
 	WHERE transaction_id = $4`
 
-	mock.ExpectExec(regexp.QuoteMeta(query)).WithArgs(transaction.Status, transaction.Type, transaction.AdditionalFields, transaction.TransactionID).WillReturnResult(pgxmock.NewResult("UPDATE", 1))
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(expectedTransaction.Status, expectedTransaction.Type, expectedTransaction.AdditionalFields, expectedTransaction.TransactionID).WillReturnRows(rows)
 
 	service := postgresService{pool: mock}
 
-	err = service.UpdateTransaction(context.Background(), "TXN_123", transaction)
+	transaction, err := service.UpdateTransaction(context.Background(), "TXN_123", expectedTransaction)
 	c.NoError(err)
-}
-
-func TestUpdateTransactionMultipleRowsAffected(t *testing.T) {
-	c := require.New(t)
-
-	mock, err := pgxmock.NewPool()
-	c.NoError(err)
-
-	defer mock.Close()
-
-	transaction := &models.Transaction{
-		TransactionID: "TXN_123",
-		Status:        models.TransactionStatusSucceeded,
-		Type:          models.TransactionTypeRefund,
-		AdditionalFields: map[string]interface{}{
-			"charge_id": "ch_123",
-			"refund_id": "re_123",
-		},
-	}
-
-	marshalledAdditionalFields, err := json.Marshal(transaction.AdditionalFields)
-	c.NoError(err)
-
-	columns := []string{"transaction_id", "status", "type", "additional_fields"}
-
-	rows := mock.NewRows(columns)
-
-	rows.AddRow(
-		transaction.TransactionID,
-		transaction.Status,
-		transaction.Type,
-		string(marshalledAdditionalFields),
-	)
-
-	query := `
-	UPDATE transactions_history
-	SET
-		status = COALESCE($1, status),
-		type = COALESCE($2, type),
-		additional_fields = COALESCE($3, additional_fields)
-	WHERE transaction_id = $4`
-
-	mock.ExpectExec(regexp.QuoteMeta(query)).WithArgs(transaction.Status, transaction.Type, transaction.AdditionalFields, transaction.TransactionID).WillReturnResult(pgxmock.NewResult("UPDATE", 2))
-
-	service := postgresService{pool: mock}
-
-	err = service.UpdateTransaction(context.Background(), "TXN_123", transaction)
-	c.ErrorIs(err, database.ErrMultipleRowsAffected)
+	c.Equal(expectedTransaction, transaction)
 }
 
 func TestUpdateTransactionFailure(t *testing.T) {
@@ -354,13 +316,14 @@ func TestUpdateTransactionFailure(t *testing.T) {
 		status = COALESCE($1, status),
 		type = COALESCE($2, type),
 		additional_fields = COALESCE($3, additional_fields)
-	WHERE transaction_id = $4`
+	WHERE transaction_id = $4
+	RETURNING *`
 
-	mock.ExpectExec(regexp.QuoteMeta(query)).WithArgs(transaction.Status, transaction.Type, transaction.AdditionalFields, transaction.TransactionID).WillReturnError(sql.ErrConnDone)
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(transaction.Status, transaction.Type, transaction.AdditionalFields, transaction.TransactionID).WillReturnError(sql.ErrConnDone)
 
 	service := postgresService{pool: mock}
 
-	err = service.UpdateTransaction(context.Background(), "TXN_123", transaction)
+	_, err = service.UpdateTransaction(context.Background(), "TXN_123", transaction)
 	c.ErrorIs(err, sql.ErrConnDone)
 
 }

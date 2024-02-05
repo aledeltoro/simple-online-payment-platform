@@ -27,10 +27,10 @@ func (m *MockPostgres) GetTransaction(ctx context.Context, transactionID string)
 }
 
 // UpdateTransaction mocks operation to update an item given its ID
-func (m *MockPostgres) UpdateTransaction(ctx context.Context, transactionID string, updatedTransaction *models.Transaction) error {
+func (m *MockPostgres) UpdateTransaction(ctx context.Context, transactionID string, updatedTransaction *models.Transaction) (*models.Transaction, error) {
 	args := m.Called(ctx, transactionID, updatedTransaction)
 
-	return args.Error(0)
+	return args.Get(0).(*models.Transaction), args.Error(1)
 }
 
 // Close mock operation to close a database connection
