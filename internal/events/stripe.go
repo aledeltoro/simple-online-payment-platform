@@ -45,7 +45,7 @@ func (e *stripeEvents) VerifyEvent() error {
 
 	event, err := webhook.ConstructEvent(payload, stripeSignature, webhookSecret)
 	if err != nil {
-		return api.NewInternalServerError(err)
+		return api.NewInvalidRequestError(ErrEventVerificationFailed)
 	}
 
 	e.event = event

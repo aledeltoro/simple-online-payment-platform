@@ -2,9 +2,9 @@ package handler
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
+	"github.com/aledeltoro/simple-online-payment-platform/internal/api"
 	"github.com/aledeltoro/simple-online-payment-platform/internal/database"
 	"github.com/aledeltoro/simple-online-payment-platform/internal/events"
 	"github.com/aledeltoro/simple-online-payment-platform/internal/models"
@@ -13,6 +13,7 @@ import (
 
 var newEventHandlerFunc = events.NewEvent
 
+// Handler interface to handle incoming events from payment processor providers
 type Handler interface {
 	HandlePaymentEvents(ctx context.Context) http.HandlerFunc
 }
@@ -21,34 +22,33 @@ type handler struct {
 	database database.Database
 }
 
+// NewHandler constructor to handle incoming requests to API
 func NewHandler(database database.Database) Handler {
 	return handler{
 		database: database,
 	}
 }
 
+// HandlePaymentsEvents validates and processes events from payment processor providers
 func (h handler) HandlePaymentEvents(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		provider := chi.URLParam(r, "provider")
 
 		eventHandler, err := newEventHandlerFunc(models.PaymentProvider(provider), h.database, r)
 		if err != nil {
-			errMessage := fmt.Errorf("initializing event handler: %w", err)
-			http.Error(w, errMessage.Error(), http.StatusOK)
+			api.WriteErrorResponse(w, err)
 			return
 		}
 
 		err = eventHandler.VerifyEvent()
 		if err != nil {
-			errMessage := fmt.Errorf("verifying event: %w", err)
-			http.Error(w, errMessage.Error(), http.StatusOK)
+			api.WriteErrorResponse(w, err)
 			return
 		}
 
 		err = eventHandler.ProcessEvent(ctx)
 		if err != nil {
-			errMessage := fmt.Errorf("processing event: %w", err)
-			http.Error(w, errMessage.Error(), http.StatusOK)
+			api.WriteErrorResponse(w, err)
 			return
 		}
 

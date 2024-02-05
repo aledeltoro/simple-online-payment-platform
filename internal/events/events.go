@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/aledeltoro/simple-online-payment-platform/internal/api"
 	"github.com/aledeltoro/simple-online-payment-platform/internal/database"
 	"github.com/aledeltoro/simple-online-payment-platform/internal/models"
 )
@@ -14,6 +15,8 @@ var (
 	ErrUnsupportedProvider = errors.New("unsupported provider")
 	// ErrUnsupportedEvent error when event is not supported by event handler
 	ErrUnsupportedEvent = errors.New("unsupported event")
+	// ErrEventVerificationFailed error when event couldn't be verified by event handler
+	ErrEventVerificationFailed = errors.New("event verification failed")
 )
 
 // Events interface to implement business logic to handle incoming events from the payment provider
@@ -28,5 +31,5 @@ func NewEvent(provider models.PaymentProvider, database database.Database, reque
 		return newStripeEvent(database, request), nil
 	}
 
-	return nil, ErrUnsupportedProvider
+	return nil, api.NewInvalidRequestError(ErrUnsupportedProvider)
 }

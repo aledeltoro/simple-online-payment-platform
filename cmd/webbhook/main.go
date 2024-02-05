@@ -17,7 +17,7 @@ import (
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("loading .env file: %s", err.Error())
+		log.Fatalf("load .env file failed: %s", err.Error())
 	}
 
 	port := os.Getenv("WEBHOOKS_PORT")
@@ -29,7 +29,7 @@ func main() {
 
 	database, err := postgres.Init(ctx)
 	if err != nil {
-		log.Fatalf("initializing database: %s \n", err.Error())
+		log.Fatalf("initialize database failed: %s \n", err.Error())
 	}
 
 	defer database.Close()
