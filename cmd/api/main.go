@@ -9,7 +9,7 @@ import (
 
 	"github.com/aledeltoro/simple-online-payment-platform/cmd/api/handler"
 	"github.com/aledeltoro/simple-online-payment-platform/internal/database/postgres"
-	"github.com/aledeltoro/simple-online-payment-platform/internal/paymentservice/stripe"
+	"github.com/aledeltoro/simple-online-payment-platform/internal/paymentprocessor/stripe"
 	"github.com/aledeltoro/simple-online-payment-platform/internal/service"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"

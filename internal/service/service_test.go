@@ -6,7 +6,7 @@ import (
 
 	"github.com/aledeltoro/simple-online-payment-platform/internal/database/postgres"
 	"github.com/aledeltoro/simple-online-payment-platform/internal/models"
-	"github.com/aledeltoro/simple-online-payment-platform/internal/paymentservice/stripe"
+	"github.com/aledeltoro/simple-online-payment-platform/internal/paymentprocessor/stripe"
 	"github.com/stretchr/testify/require"
 )
 

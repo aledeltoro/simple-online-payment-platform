@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/aledeltoro/simple-online-payment-platform/internal/models"
-	"github.com/aledeltoro/simple-online-payment-platform/internal/paymentservice"
+	"github.com/aledeltoro/simple-online-payment-platform/internal/paymentprocessor"
 	"github.com/oklog/ulid/v2"
 	"github.com/stripe/stripe-go/v76"
 	"github.com/stripe/stripe-go/v76/client"
@@ -20,7 +20,7 @@ type stripeService struct {
 }
 
 // New initializes implementation of Stripe service
-func New() (paymentservice.PaymentService, error) {
+func New() (paymentprocessor.PaymentProcessor, error) {
 	stripeKey := os.Getenv("STRIPE_SECRET_KEY")
 
 	if stripeKey == "" {
@@ -32,7 +32,7 @@ func New() (paymentservice.PaymentService, error) {
 	}, nil
 }
 
-// PerformTransaction method to perform a transaction
+// PerformTransaction performs transaction to payment processor
 func (s stripeService) PerformTransaction(input *models.TransactionInput) (*models.Transaction, error) {
 	transactionID := fmt.Sprintf("TXN_%s", ulid.Make().String())
 
@@ -79,6 +79,7 @@ func (s stripeService) QueryTransaction(id string) (*models.Transaction, error) 
 	return nil, nil
 }
 
+// RefundTransaction performs refund to payment processor
 func (s stripeService) RefundTransaction(metadata map[string]interface{}) (*models.Transaction, error) {
 	chargeID, ok := metadata["charge_id"].(string)
 	if !ok {

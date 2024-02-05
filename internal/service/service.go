@@ -7,7 +7,7 @@ import (
 
 	"github.com/aledeltoro/simple-online-payment-platform/internal/database"
 	"github.com/aledeltoro/simple-online-payment-platform/internal/models"
-	"github.com/aledeltoro/simple-online-payment-platform/internal/paymentservice"
+	"github.com/aledeltoro/simple-online-payment-platform/internal/paymentprocessor"
 )
 
 var (
@@ -23,10 +23,10 @@ type OnlinePaymentService interface {
 
 type onlinePaymentService struct {
 	database         database.Database
-	paymentProcessor paymentservice.PaymentService
+	paymentProcessor paymentprocessor.PaymentProcessor
 }
 
-func NewOnlinePaymentService(database database.Database, paymentProcessor paymentservice.PaymentService) OnlinePaymentService {
+func NewOnlinePaymentService(database database.Database, paymentProcessor paymentprocessor.PaymentProcessor) OnlinePaymentService {
 	return onlinePaymentService{
 		database:         database,
 		paymentProcessor: paymentProcessor,
