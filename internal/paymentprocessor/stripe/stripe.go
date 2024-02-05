@@ -75,10 +75,6 @@ func (s stripeService) PerformTransaction(input *models.TransactionInput) (*mode
 	return transaction, nil
 }
 
-func (s stripeService) QueryTransaction(id string) (*models.Transaction, error) {
-	return nil, nil
-}
-
 // RefundTransaction performs refund to payment processor
 func (s stripeService) RefundTransaction(metadata map[string]interface{}) (*models.Transaction, error) {
 	chargeID, ok := metadata["charge_id"].(string)
