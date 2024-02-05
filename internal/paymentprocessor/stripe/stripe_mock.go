@@ -18,6 +18,10 @@ type MockStripe struct {
 func (m *MockStripe) PerformTransaction(input *models.TransactionInput) (*models.Transaction, error) {
 	args := m.Called(input)
 
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+
 	return args.Get(0).(*models.Transaction), args.Error(1)
 }
 
@@ -35,6 +39,10 @@ func (m *MockStripe) QueryTransaction(id string) (*models.Transaction, error) {
 // RefundTransaction mock implementation
 func (m *MockStripe) RefundTransaction(metadata map[string]interface{}) (*models.Transaction, error) {
 	args := m.Called(metadata)
+
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
 
 	return args.Get(0).(*models.Transaction), args.Error(1)
 }

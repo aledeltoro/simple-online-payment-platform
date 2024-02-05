@@ -11,6 +11,7 @@ import (
 )
 
 var (
+	// ErrMissingTransactionID error when transaction ID is missing
 	ErrMissingTransactionID = errors.New("missing transaction id")
 )
 
@@ -26,6 +27,7 @@ type onlinePaymentService struct {
 	paymentProcessor paymentprocessor.PaymentProcessor
 }
 
+// NewOnlinePaymentService constructor for online payment service
 func NewOnlinePaymentService(database database.Database, paymentProcessor paymentprocessor.PaymentProcessor) OnlinePaymentService {
 	return onlinePaymentService{
 		database:         database,
@@ -33,6 +35,7 @@ func NewOnlinePaymentService(database database.Database, paymentProcessor paymen
 	}
 }
 
+// ProcessPayment handles business logic to process a payment
 func (o onlinePaymentService) ProcessPayment(ctx context.Context, amount int64, currency, paymentMethod, description string) (*models.Transaction, error) {
 	input := &models.TransactionInput{
 		Amount:        amount,
@@ -59,6 +62,7 @@ func (o onlinePaymentService) ProcessPayment(ctx context.Context, amount int64, 
 	return transaction, nil
 }
 
+// QueryPayment handles business logic to query a payment
 func (o onlinePaymentService) QueryPayment(ctx context.Context, transactionID string) (*models.Transaction, error) {
 	if transactionID == "" {
 		return nil, ErrMissingTransactionID
@@ -67,6 +71,7 @@ func (o onlinePaymentService) QueryPayment(ctx context.Context, transactionID st
 	return o.database.GetTransaction(ctx, transactionID)
 }
 
+// RefundPayment handles business logic to refund a payment
 func (o onlinePaymentService) RefundPayment(ctx context.Context, transactionID string) (*models.Transaction, error) {
 	if transactionID == "" {
 		return nil, ErrMissingTransactionID
@@ -74,18 +79,18 @@ func (o onlinePaymentService) RefundPayment(ctx context.Context, transactionID s
 
 	transaction, err := o.database.GetTransaction(ctx, transactionID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("querying transaction: %w", err)
 	}
 
 	refundedTransaction, err := o.paymentProcessor.RefundTransaction(transaction.AdditionalFields)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("refunding transaction: %w", err)
 	}
 
-	err = o.database.UpdateTransaction(ctx, transactionID, refundedTransaction)
+	updatedTransaction, err := o.database.UpdateTransaction(ctx, transactionID, refundedTransaction)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("updating transaction: %w", err)
 	}
 
-	return o.database.GetTransaction(ctx, transactionID)
+	return updatedTransaction, nil
 }

@@ -84,7 +84,7 @@ func (e *stripeEvents) ProcessEvent(ctx context.Context) error {
 		transaction.Type = models.TransactionTypeRefund
 	}
 
-	err := e.database.UpdateTransaction(ctx, transaction.TransactionID, transaction)
+	_, err := e.database.UpdateTransaction(ctx, transaction.TransactionID, transaction)
 	if err != nil {
 		return err
 	}
