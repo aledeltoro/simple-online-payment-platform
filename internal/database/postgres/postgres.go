@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/aledeltoro/simple-online-payment-platform/internal/api"
 	"github.com/aledeltoro/simple-online-payment-platform/internal/database"
 	"github.com/aledeltoro/simple-online-payment-platform/internal/models"
 	"github.com/jackc/pgx/v5"
@@ -72,7 +73,7 @@ func (p postgresService) InsertTransaction(ctx context.Context, transaction *mod
 
 	_, err := p.pool.Exec(ctx, query, transaction.TransactionID, transaction.Status, transaction.Description, transaction.FailureReason, transaction.Provider, transaction.Amount, transaction.Currency, transaction.Type, transaction.AdditionalFields)
 	if err != nil {
-		return fmt.Errorf("execute query failed: %w", err)
+		return api.NewInternalServerError(fmt.Errorf("execute query failed: %w", err))
 	}
 
 	return nil
@@ -112,17 +113,17 @@ func (p postgresService) GetTransaction(ctx context.Context, transactionID strin
 		&additionalFieldsJSON,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, database.ErrTransactionNotFound
+		return nil, api.NewResourceNotFoundError(database.ErrTransactionNotFound, "transaction")
 	}
 
 	if err != nil {
-		return nil, fmt.Errorf("scan row failed: %w", err)
+		return nil, api.NewInternalServerError(fmt.Errorf("scan row failed: %w", err))
 	}
 
 	if additionalFieldsJSON != "" {
 		err = json.Unmarshal([]byte(additionalFieldsJSON), &transaction.AdditionalFields)
 		if err != nil {
-			return nil, fmt.Errorf("unmarshal value failed: %w", err)
+			return nil, api.NewInternalServerError(fmt.Errorf("unmarshal value failed: %w", err))
 		}
 	}
 
@@ -158,13 +159,13 @@ func (p postgresService) UpdateTransaction(ctx context.Context, transactionID st
 		&additionalFieldsJSON,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("update and scan row failed: %w", err)
+		return nil, api.NewInternalServerError(fmt.Errorf("update and scan row failed: %w", err))
 	}
 
 	if additionalFieldsJSON != "" {
 		err = json.Unmarshal([]byte(additionalFieldsJSON), &transaction.AdditionalFields)
 		if err != nil {
-			return nil, fmt.Errorf("unmarshal value failed: %w", err)
+			return nil, api.NewInternalServerError(fmt.Errorf("unmarshal value failed: %w", err))
 		}
 	}
 

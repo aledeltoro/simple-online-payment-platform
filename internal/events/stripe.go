@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/aledeltoro/simple-online-payment-platform/internal/api"
 	"github.com/aledeltoro/simple-online-payment-platform/internal/database"
 	"github.com/aledeltoro/simple-online-payment-platform/internal/models"
 	"github.com/stripe/stripe-go/v76"
@@ -39,12 +40,12 @@ func (e *stripeEvents) VerifyEvent() error {
 
 	payload, err := io.ReadAll(e.request.Body)
 	if err != nil {
-		return err
+		return api.NewInternalServerError(err)
 	}
 
 	event, err := webhook.ConstructEvent(payload, stripeSignature, webhookSecret)
 	if err != nil {
-		return err
+		return api.NewInternalServerError(err)
 	}
 
 	e.event = event
@@ -55,7 +56,7 @@ func (e *stripeEvents) VerifyEvent() error {
 // ProcessEvent handles the incoming event according to its type
 func (e *stripeEvents) ProcessEvent(ctx context.Context) error {
 	if _, ok := supportedStripeEvents[e.event.Type]; !ok {
-		return ErrUnsupportedEvent
+		return api.NewInvalidRequestError(ErrUnsupportedEvent)
 	}
 
 	transaction := &models.Transaction{}
@@ -66,7 +67,7 @@ func (e *stripeEvents) ProcessEvent(ctx context.Context) error {
 
 		err := json.Unmarshal(e.event.Data.Raw, &paymentIntent)
 		if err != nil {
-			return err
+			return api.NewInternalServerError(err)
 		}
 
 		transaction.TransactionID = paymentIntent.Metadata["transaction_id"]
@@ -77,7 +78,7 @@ func (e *stripeEvents) ProcessEvent(ctx context.Context) error {
 
 		err := json.Unmarshal(e.event.Data.Raw, &charge)
 		if err != nil {
-			return err
+			return api.NewInternalServerError(err)
 		}
 
 		transaction.TransactionID = charge.Metadata["transaction_id"]

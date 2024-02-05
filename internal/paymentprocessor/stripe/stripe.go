@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/aledeltoro/simple-online-payment-platform/internal/api"
 	"github.com/aledeltoro/simple-online-payment-platform/internal/models"
 	"github.com/aledeltoro/simple-online-payment-platform/internal/paymentprocessor"
 	"github.com/oklog/ulid/v2"
@@ -62,7 +63,7 @@ func (s stripeService) PerformTransaction(input *models.TransactionInput) (*mode
 	result, err := s.client.PaymentIntents.New(params)
 	if err != nil {
 		if errors.As(err, &stripeErr) && stripeErr.Type != stripe.ErrorTypeCard {
-			return nil, fmt.Errorf("performing transaction: %s", stripeErr.Code)
+			return nil, api.NewInternalServerError(fmt.Errorf("performing transaction: %s", stripeErr.Code))
 		}
 	}
 
@@ -104,10 +105,10 @@ func (s stripeService) RefundTransaction(metadata map[string]interface{}) (*mode
 	result, err := s.client.Refunds.New(params)
 	if err != nil {
 		if errors.As(err, &stripeErr) && stripeErr.Code == stripe.ErrorCodeChargeAlreadyRefunded {
-			return nil, ErrChargeAlreadyRefunded
+			return nil, api.NewInvalidRequestError(ErrChargeAlreadyRefunded)
 		}
 
-		return nil, fmt.Errorf("performing refund: %w", err)
+		return nil, api.NewInternalServerError(fmt.Errorf("performing refund: %w", err))
 	}
 
 	transaction := &models.Transaction{

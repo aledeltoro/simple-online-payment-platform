@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 
+	"github.com/aledeltoro/simple-online-payment-platform/internal/api"
 	"github.com/aledeltoro/simple-online-payment-platform/internal/database"
 	"github.com/aledeltoro/simple-online-payment-platform/internal/models"
 	"github.com/aledeltoro/simple-online-payment-platform/internal/paymentprocessor"
@@ -12,7 +12,7 @@ import (
 
 var (
 	// ErrMissingTransactionID error when transaction ID is missing
-	ErrMissingTransactionID = errors.New("missing transaction id")
+	ErrMissingTransactionID = api.NewInvalidRequestError(errors.New("missing transaction id"))
 )
 
 // OnlinePaymentService interface to implement business logic for the online payment platform
@@ -46,17 +46,17 @@ func (o onlinePaymentService) ProcessPayment(ctx context.Context, amount int64, 
 
 	err := input.Validate()
 	if err != nil {
-		return nil, err
+		return nil, api.NewInvalidRequestError(err)
 	}
 
 	transaction, err := o.paymentProcessor.PerformTransaction(input)
 	if err != nil {
-		return nil, fmt.Errorf("performing transaction: %w", err)
+		return nil, err
 	}
 
 	err = o.database.InsertTransaction(ctx, transaction)
 	if err != nil {
-		return nil, fmt.Errorf("inserting transaction: %w", err)
+		return nil, err
 	}
 
 	return transaction, nil
@@ -79,17 +79,17 @@ func (o onlinePaymentService) RefundPayment(ctx context.Context, transactionID s
 
 	transaction, err := o.database.GetTransaction(ctx, transactionID)
 	if err != nil {
-		return nil, fmt.Errorf("querying transaction: %w", err)
+		return nil, err
 	}
 
 	refundedTransaction, err := o.paymentProcessor.RefundTransaction(transaction.AdditionalFields)
 	if err != nil {
-		return nil, fmt.Errorf("refunding transaction: %w", err)
+		return nil, err
 	}
 
 	updatedTransaction, err := o.database.UpdateTransaction(ctx, transactionID, refundedTransaction)
 	if err != nil {
-		return nil, fmt.Errorf("updating transaction: %w", err)
+		return nil, err
 	}
 
 	return updatedTransaction, nil
