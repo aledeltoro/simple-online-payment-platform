@@ -32,6 +32,7 @@ func newStripeEvent(database database.Database, request *http.Request) Events {
 	}
 }
 
+// VerifyEvent validates the incoming event
 func (e *stripeEvents) VerifyEvent() error {
 	webhookSecret := os.Getenv("STRIPE_WEBHOOK_SECRET_KEY")
 	stripeSignature := e.request.Header.Get("Stripe-Signature")
@@ -51,6 +52,7 @@ func (e *stripeEvents) VerifyEvent() error {
 	return nil
 }
 
+// ProcessEvent handles the incoming event according to its type
 func (e *stripeEvents) ProcessEvent(ctx context.Context) error {
 	if _, ok := supportedStripeEvents[e.event.Type]; !ok {
 		return ErrUnsupportedEvent
@@ -70,7 +72,6 @@ func (e *stripeEvents) ProcessEvent(ctx context.Context) error {
 		transaction.TransactionID = paymentIntent.Metadata["transaction_id"]
 		transaction.Status = models.TransactionStatus(paymentIntent.Status)
 		transaction.Type = models.TransactionTypeCharge
-
 	case stripe.EventTypeChargeRefunded:
 		var charge *stripe.Charge
 

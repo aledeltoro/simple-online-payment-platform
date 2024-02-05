@@ -10,8 +10,10 @@ import (
 )
 
 var (
+	// ErrUnsupportedProvider error when incoming provider is unsupported
 	ErrUnsupportedProvider = errors.New("unsupported provider")
-	ErrUnsupportedEvent    = errors.New("unsupported event")
+	// ErrUnsupportedEvent error when event is not supported by event handler
+	ErrUnsupportedEvent = errors.New("unsupported event")
 )
 
 // Events interface to implement business logic to handle incoming events from the payment provider
@@ -20,6 +22,7 @@ type Events interface {
 	ProcessEvent(ctx context.Context) error
 }
 
+// NewEvent constructor to return the proper event handler
 func NewEvent(provider models.PaymentProvider, database database.Database, request *http.Request) (Events, error) {
 	if provider == models.PaymentProviderStripe {
 		return newStripeEvent(database, request), nil
