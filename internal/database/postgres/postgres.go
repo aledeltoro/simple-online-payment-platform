@@ -59,15 +59,16 @@ func (p postgresService) InsertTransaction(ctx context.Context, transaction *mod
 	INSERT INTO transactions_history(
 		transaction_id,
 		status,
+		description,
 		failure_reason,
 		payment_provider,
 		amount,
 		currency,
 		type,
 		additional_fields
-	) VALUES($1, $2, $3, $4, $5, $6, $7, $8)`
+	) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)`
 
-	_, err := p.pool.Exec(ctx, query, transaction.TransactionID, transaction.Status, transaction.FailureReason, transaction.Provider, transaction.Amount, transaction.Currency, transaction.Type, transaction.AdditionalFields)
+	_, err := p.pool.Exec(ctx, query, transaction.TransactionID, transaction.Status, transaction.Description, transaction.FailureReason, transaction.Provider, transaction.Amount, transaction.Currency, transaction.Type, transaction.AdditionalFields)
 
 	return err
 }
@@ -77,6 +78,7 @@ func (p postgresService) GetTransaction(ctx context.Context, transactionID strin
 	SELECT
 		transaction_id,
 		status,
+		description,
 		failure_reason,
 		payment_provider,
 		amount,
@@ -95,6 +97,7 @@ func (p postgresService) GetTransaction(ctx context.Context, transactionID strin
 	err := row.Scan(
 		&transaction.TransactionID,
 		&transaction.Status,
+		&transaction.Description,
 		&transaction.FailureReason,
 		&transaction.Provider,
 		&transaction.Amount,

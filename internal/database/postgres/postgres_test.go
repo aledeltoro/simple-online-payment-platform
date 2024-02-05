@@ -22,6 +22,7 @@ func TestInsertTransaction(t *testing.T) {
 	transaction := &models.Transaction{
 		TransactionID: "TXN123",
 		Status:        models.TransactionStatusSucceeded,
+		Description:   "Sample description",
 		Provider:      models.PaymentProviderStripe,
 		Amount:        2000,
 		Currency:      "USD",
@@ -34,6 +35,7 @@ func TestInsertTransaction(t *testing.T) {
 	mock.ExpectExec("INSERT INTO transactions_history").WithArgs(
 		transaction.TransactionID,
 		transaction.Status,
+		transaction.Description,
 		transaction.FailureReason,
 		transaction.Provider,
 		transaction.Amount,
@@ -61,13 +63,14 @@ func TestGetTransaction(t *testing.T) {
 	})
 	c.NoError(err)
 
-	rows := mock.NewRows([]string{"transaction_id", "status", "failure_reason", "payment_provider", "amount", "currency", "type", "additional_fields"})
-	rows.AddRow("TXN123", models.TransactionStatusSucceeded, "", models.PaymentProviderStripe, 2000, "usd", models.TransactionTypeCharge, string(marshalledAdditionalFields))
+	rows := mock.NewRows([]string{"transaction_id", "status", "description", "failure_reason", "payment_provider", "amount", "currency", "type", "additional_fields"})
+	rows.AddRow("TXN123", models.TransactionStatusSucceeded, "Description", "", models.PaymentProviderStripe, 2000, "usd", models.TransactionTypeCharge, string(marshalledAdditionalFields))
 
 	query := `
 	SELECT
 		transaction_id,
 		status,
+		description,
 		failure_reason,
 		payment_provider,
 		amount,
@@ -106,13 +109,14 @@ func TestUpdateTransaction(t *testing.T) {
 	query := `
 	UPDATE transactions_history
 	SET
-		type = $1,
-		additional_fields = $2
-	WHERE transaction_id = $3
-	RETURN *`
+		status = COALESCE($1, status),
+		type = COALESCE($2, type),
+		additional_fields = COALESCE($3, additional_fields)
+	WHERE transaction_id = $4`
 
 	transaction := &models.Transaction{
 		TransactionID: "TXN123",
+		Status:        models.TransactionStatusSucceeded,
 		Type:          models.TransactionTypeRefund,
 		AdditionalFields: map[string]interface{}{
 			"charge_id": "ch_123",
@@ -120,7 +124,7 @@ func TestUpdateTransaction(t *testing.T) {
 		},
 	}
 
-	mock.ExpectExec(regexp.QuoteMeta(query)).WithArgs(transaction.Type, transaction.AdditionalFields, transaction.TransactionID).WillReturnResult(pgxmock.NewResult("1", 1))
+	mock.ExpectExec(regexp.QuoteMeta(query)).WithArgs(transaction.Status, transaction.Type, transaction.AdditionalFields, transaction.TransactionID).WillReturnResult(pgxmock.NewResult("1", 1))
 
 	service := postgresService{pool: mock}
 
