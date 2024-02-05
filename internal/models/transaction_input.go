@@ -14,11 +14,15 @@ type TransactionInput struct {
 }
 
 var (
-	ErrInvalidAmount        = errors.New("invalid amount")
-	ErrMissingCurrency      = errors.New("missing currency")
+	// ErrInvalidAmount error when amount is equal or less than zero
+	ErrInvalidAmount = errors.New("invalid amount")
+	// ErrMissingCurrency error when currency is missing
+	ErrMissingCurrency = errors.New("missing currency")
+	// ErrMissingPaymentMethod error when payment method is missing
 	ErrMissingPaymentMethod = errors.New("missing payment method")
 )
 
+// Validate validate the inputs required for a transaction
 func (ti *TransactionInput) Validate() error {
 	if ti.Amount <= 0 {
 		return ErrInvalidAmount

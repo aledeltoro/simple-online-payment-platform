@@ -19,7 +19,8 @@ var (
 
 	// PaymentProviderStripe represents the Stripe integration
 	PaymentProviderStripe PaymentProvider = "stripe"
-	PaymentProviderMock   PaymentProvider = "mock"
+	// PaymentProviderMock represents a mock integration
+	PaymentProviderMock PaymentProvider = "mock"
 
 	// TransactionTypeCharge type for processed transactions
 	TransactionTypeCharge TransactionType = "charge"
