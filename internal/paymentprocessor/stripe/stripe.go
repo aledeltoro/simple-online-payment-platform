@@ -12,8 +12,14 @@ import (
 	"github.com/stripe/stripe-go/v76/client"
 )
 
-// ErrMissingAPIKey error when missing api key
-var ErrMissingAPIKey = errors.New("missing api key")
+var (
+	// ErrMissingAPIKey error when missing api key
+	ErrMissingAPIKey = errors.New("missing api key")
+	// ErrChargeAlreadyRefunded error when charge has been refunded already
+	ErrChargeAlreadyRefunded = errors.New("charge already refunded")
+	// ErrMissingChargeID error when missing charge ID
+	ErrMissingChargeID = errors.New("missing charge ID")
+)
 
 type stripeService struct {
 	client *client.API
@@ -51,13 +57,15 @@ func (s stripeService) PerformTransaction(input *models.TransactionInput) (*mode
 		},
 	}
 
+	var stripeErr *stripe.Error
+
 	result, err := s.client.PaymentIntents.New(params)
 	if err != nil {
-		// Handle all errors, except card error
-		return nil, fmt.Errorf("performing transaction: %w", err)
+		if errors.As(err, &stripeErr) && stripeErr.Type != stripe.ErrorTypeCard {
+			return nil, fmt.Errorf("performing transaction: %s", stripeErr.Code)
+		}
 	}
 
-	// Card error should be handled here, if found, we should return a normal transaction object
 	transaction := &models.Transaction{
 		TransactionID: transactionID,
 		Status:        models.TransactionStatusPending,
@@ -72,6 +80,11 @@ func (s stripeService) PerformTransaction(input *models.TransactionInput) (*mode
 		},
 	}
 
+	if stripeErr != nil && stripeErr.Type == stripe.ErrorTypeCard {
+		transaction.Status = models.TransactionStatusFailure
+		transaction.FailureReason = string(stripeErr.Code)
+	}
+
 	return transaction, nil
 }
 
@@ -79,15 +92,21 @@ func (s stripeService) PerformTransaction(input *models.TransactionInput) (*mode
 func (s stripeService) RefundTransaction(metadata map[string]interface{}) (*models.Transaction, error) {
 	chargeID, ok := metadata["charge_id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing charge_id")
+		return nil, ErrMissingChargeID
 	}
 
 	params := &stripe.RefundParams{
 		Charge: stripe.String(chargeID),
 	}
 
+	var stripeErr *stripe.Error
+
 	result, err := s.client.Refunds.New(params)
 	if err != nil {
+		if errors.As(err, &stripeErr) && stripeErr.Code == stripe.ErrorCodeChargeAlreadyRefunded {
+			return nil, ErrChargeAlreadyRefunded
+		}
+
 		return nil, fmt.Errorf("performing refund: %w", err)
 	}
 
