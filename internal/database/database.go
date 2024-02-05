@@ -8,7 +8,10 @@ import (
 )
 
 var (
+	// ErrTransactionNotFound error when transaction was not found
 	ErrTransactionNotFound = errors.New("transaction not found")
+	// ErrMultipleRowsAffected error when multiple rows were affeted in an operation
+	ErrMultipleRowsAffected = errors.New("multiple rows affected")
 )
 
 // Database service to handle database integrations
