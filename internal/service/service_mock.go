@@ -16,6 +16,10 @@ type MockOnlinePaymentService struct {
 func (m *MockOnlinePaymentService) ProcessPayment(ctx context.Context, amount int64, currency, paymentMethod, description string) (*models.Transaction, error) {
 	args := m.Called(ctx, amount, currency, paymentMethod, description)
 
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+
 	return args.Get(0).(*models.Transaction), args.Error(1)
 }
 
@@ -23,12 +27,20 @@ func (m *MockOnlinePaymentService) ProcessPayment(ctx context.Context, amount in
 func (m *MockOnlinePaymentService) QueryPayment(ctx context.Context, transactionID string) (*models.Transaction, error) {
 	args := m.Called(ctx, transactionID)
 
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+
 	return args.Get(0).(*models.Transaction), args.Error(1)
 }
 
 // RefundPayment mock implementation
 func (m *MockOnlinePaymentService) RefundPayment(ctx context.Context, transactionID string) (*models.Transaction, error) {
 	args := m.Called(ctx, transactionID)
+
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
 
 	return args.Get(0).(*models.Transaction), args.Error(1)
 }

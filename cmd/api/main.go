@@ -19,7 +19,7 @@ import (
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("loading .env file: %s", err.Error())
+		log.Fatalf("load .env file failed: %s", err.Error())
 	}
 
 	port := os.Getenv("API_PORT")
@@ -31,14 +31,14 @@ func main() {
 
 	database, err := postgres.Init(ctx)
 	if err != nil {
-		log.Fatalf("initializing database: %s \n", err.Error())
+		log.Fatalf("initialize database failed: %s \n", err.Error())
 	}
 
 	defer database.Close()
 
 	paymentprocessor, err := stripe.New()
 	if err != nil {
-		log.Fatalf("initializing stripe payment processor: %s \n", err.Error())
+		log.Fatalf("initialize stripe payment processor failed: %s \n", err.Error())
 	}
 
 	onlinePaymentService := service.NewOnlinePaymentService(database, paymentprocessor)
