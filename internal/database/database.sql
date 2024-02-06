@@ -1,7 +1,3 @@
-CREATE DATABASE payment_platform;
-
-\c payment_platform;
-
 CREATE TABLE IF NOT EXISTS transactions_history (
   transaction_id VARCHAR PRIMARY KEY,
   status VARCHAR(20) NOT NULL,

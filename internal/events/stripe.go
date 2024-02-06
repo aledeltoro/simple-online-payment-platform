@@ -21,6 +21,12 @@ var supportedStripeEvents = map[stripe.EventType]bool{
 	stripe.EventTypeChargeRefunded:             true,
 }
 
+var eventTypeToStatus = map[stripe.EventType]models.TransactionStatus{
+	stripe.EventTypePaymentIntentSucceeded:     models.TransactionStatusSucceeded,
+	stripe.EventTypePaymentIntentPaymentFailed: models.TransactionStatusFailure,
+	stripe.EventTypeChargeRefunded:             models.TransactionStatusSucceeded,
+}
+
 type stripeEvents struct {
 	database database.Database
 	request  *http.Request
@@ -72,7 +78,7 @@ func (e *stripeEvents) ProcessEvent(ctx context.Context) error {
 		}
 
 		transaction.TransactionID = paymentIntent.Metadata["transaction_id"]
-		transaction.Status = models.TransactionStatus(paymentIntent.Status)
+		transaction.Status = eventTypeToStatus[e.event.Type]
 		transaction.Type = models.TransactionTypeCharge
 	case stripe.EventTypeChargeRefunded:
 		var charge *stripe.Charge
@@ -83,7 +89,7 @@ func (e *stripeEvents) ProcessEvent(ctx context.Context) error {
 		}
 
 		transaction.TransactionID = charge.Metadata["transaction_id"]
-		transaction.Status = models.TransactionStatus(charge.Status)
+		transaction.Status = eventTypeToStatus[e.event.Type]
 		transaction.Type = models.TransactionTypeRefund
 	}
 

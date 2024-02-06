@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  api:
+    build:
+      context: ./
+      dockerfile: cmd/api/Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+    - postgres
+    env_file:
+      - .env
+  webhook:
+    build:
+      context: ./
+      dockerfile: cmd/webhook/Dockerfile
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+  postgres:
+    hostname: database
+    image: postgres:14-alpine
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./internal/database/database.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=payment_platform
+
+volumes:
+  pgdata:
