@@ -8,7 +8,7 @@ The architecture is orchestrated using Docker Compose, which has the following c
 
 - **Online Payment Platform API**. API service used to create, query and refund payments through a bank simulator.
 
-- **Online Payments Webhooks**. Webhoook handling service dedicated to listen for incoming events and update the status from actions performed using the _Online Payment Platform API_, such as creating or refunding a transaction.
+- **Online Payment Webhooks**. Webhoook handling service dedicated to listen for incoming events and update the status from actions performed using the _Online Payment Platform API_, such as creating or refunding a transaction.
 
 - **PostgreSQL**. Database service used to persist transactions created through the platform.
 
@@ -17,6 +17,10 @@ The architecture is orchestrated using Docker Compose, which has the following c
 ### Diagram
 
 ![Architecture diagram for Simple Online Payment Platform](./simple-online-payment-service_diagram.jpg)
+
+## API resources
+
+For more information about the API resources supported by this service, click [here](./api_resources.md)
 
 ## Getting Started
 
@@ -105,6 +109,14 @@ In order to start the services composing the platform, run the following command
 ```docker
 docker-compose up --build
 ```
+
+### Testing using Stripe
+
+In order to create successful or unsucessful payments, we must use the test cards provided by Stripe's `Test mode`:
+
+- Examples of test cards to perform succesful payments: `pm_card_visa`, `pm_card_mastercard_debit`. For more examples, click [here](https://stripe.com/docs/testing?testing-method=payment-methods#cards)
+
+- Examples of test cards to perform unsuccesful payments: `pm_card_visa_chargeDeclined`, `pm_card_visa_chargeDeclinedInsufficientFunds`. For more examples, click [here](https://stripe.com/docs/testing?testing-method=payment-methods#declined-payments)
 
 ## Built With
 
