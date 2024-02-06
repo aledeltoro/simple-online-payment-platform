@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/aledeltoro/simple-online-payment-platform/cmd/webbhook/handler"
+	"github.com/aledeltoro/simple-online-payment-platform/cmd/webhook/handler"
 	"github.com/aledeltoro/simple-online-payment-platform/internal/database/postgres"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
