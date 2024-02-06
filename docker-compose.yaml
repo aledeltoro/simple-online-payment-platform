@@ -16,6 +16,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      stripe:
+        condition: service_started
     build:
       context: ./
       dockerfile: cmd/webhook/Dockerfile
@@ -23,6 +25,9 @@ services:
       - "3001:3001"
     env_file:
       - .env
+  stripe:
+    image: stripe/stripe-cli
+    command: "listen --api-key ${STRIPE_SECRET_KEY} --device-name stripe-cli --forward-to webhook:3001/payments/stripe/events"
   postgres:
     hostname: database
     image: postgres
