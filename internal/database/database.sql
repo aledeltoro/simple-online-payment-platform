@@ -7,7 +7,5 @@ CREATE TABLE IF NOT EXISTS transactions_history (
   amount NUMERIC NOT NULL,
   currency CHAR(3) NOT NULL,
   type VARCHAR(10) NOT NULL,
-  additional_fields JSONB,
-  creation_date TIMESTAMPTZ,
-  update_date TIMESTAMPTZ
+  additional_fields JSONB
 );
