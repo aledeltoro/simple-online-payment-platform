@@ -3,6 +3,7 @@ package events
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -56,7 +57,7 @@ func (e *stripeEvents) VerifyEvent() error {
 // ProcessEvent handles the incoming event according to its type
 func (e *stripeEvents) ProcessEvent(ctx context.Context) error {
 	if _, ok := supportedStripeEvents[e.event.Type]; !ok {
-		return api.NewInvalidRequestError(ErrUnsupportedEvent)
+		return api.NewInvalidRequestError(fmt.Errorf("%w: %s", ErrUnsupportedEvent, e.event.Type))
 	}
 
 	transaction := &models.Transaction{}

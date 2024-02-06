@@ -139,7 +139,16 @@ func (p postgresService) UpdateTransaction(ctx context.Context, transactionID st
 		type = COALESCE($2, type),
 		additional_fields = COALESCE($3, additional_fields)
 	WHERE transaction_id = $4
-	RETURNING *
+	RETURNING
+		transaction_id,
+		status,
+		description,
+		failure_reason,
+		payment_provider,
+		amount,
+		currency,
+		type,
+		additional_fields
 	`
 
 	row := p.pool.QueryRow(ctx, query, updatedTransaction.Status, updatedTransaction.Type, updatedTransaction.AdditionalFields, transactionID)

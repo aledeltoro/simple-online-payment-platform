@@ -3,6 +3,7 @@ package events
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/aledeltoro/simple-online-payment-platform/internal/api"
@@ -31,5 +32,5 @@ func NewEvent(provider models.PaymentProvider, database database.Database, reque
 		return newStripeEvent(database, request), nil
 	}
 
-	return nil, api.NewInvalidRequestError(ErrUnsupportedProvider)
+	return nil, api.NewInvalidRequestError(fmt.Errorf("%w: %s", ErrUnsupportedProvider, provider))
 }

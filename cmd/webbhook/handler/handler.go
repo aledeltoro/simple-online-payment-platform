@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/aledeltoro/simple-online-payment-platform/internal/api"
@@ -36,18 +37,21 @@ func (h handler) HandlePaymentEvents(ctx context.Context) http.HandlerFunc {
 
 		eventHandler, err := newEventHandlerFunc(models.PaymentProvider(provider), h.database, r)
 		if err != nil {
+			log.Println(err)
 			api.WriteErrorResponse(w, err)
 			return
 		}
 
 		err = eventHandler.VerifyEvent()
 		if err != nil {
+			log.Println(err)
 			api.WriteErrorResponse(w, err)
 			return
 		}
 
 		err = eventHandler.ProcessEvent(ctx)
 		if err != nil {
+			log.Println(err)
 			api.WriteErrorResponse(w, err)
 			return
 		}

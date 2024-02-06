@@ -173,6 +173,5 @@ func TestHandlerPaymentEventsProcessEventFailure(t *testing.T) {
 	err := json.NewDecoder(response.Body).Decode(&apiErr)
 	c.NoError(err)
 	c.Equal(api.ErrCodeInternalServerError, apiErr.Code())
-	c.Contains(apiErr.Error(), "Internal server error, please try again later")
-
+	c.Contains(apiErr.Error(), "Internal server error")
 }

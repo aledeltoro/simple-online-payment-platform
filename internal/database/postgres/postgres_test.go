@@ -317,7 +317,16 @@ func TestUpdateTransactionFailure(t *testing.T) {
 		type = COALESCE($2, type),
 		additional_fields = COALESCE($3, additional_fields)
 	WHERE transaction_id = $4
-	RETURNING *`
+	RETURNING
+		transaction_id,
+		status,
+		description,
+		failure_reason,
+		payment_provider,
+		amount,
+		currency,
+		type,
+		additional_fields`
 
 	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(transaction.Status, transaction.Type, transaction.AdditionalFields, transaction.TransactionID).WillReturnError(sql.ErrConnDone)
 

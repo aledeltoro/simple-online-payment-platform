@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"os"
 )
 
 // ErrorCode error code for each type of error in the service
@@ -55,12 +56,18 @@ func (e APIErr) Error() string {
 
 // NewInternalServerError API error to handle unexpected behavior in the service
 func NewInternalServerError(err error) APIErr {
-	return APIErr{
+	apiErr := APIErr{
 		ErrCode:    ErrCodeInternalServerError,
 		StatusCode: http.StatusInternalServerError,
-		Message:    "Internal server error, please try again later",
+		Message:    "Internal server error",
 		err:        err,
 	}
+
+	if os.Getenv("DEBUG_MODE") == "true" {
+		apiErr.Message = fmt.Sprintf("Internal server error: %s", err.Error())
+	}
+
+	return apiErr
 }
 
 // NewInvalidRequestError API error to handle invalid request in the service
@@ -78,7 +85,7 @@ func NewResourceNotFoundError(err error, resource string) APIErr {
 	return APIErr{
 		ErrCode:    ErrCodeResourceNotFound,
 		StatusCode: http.StatusNotFound,
-		Message:    fmt.Sprintf("Resource %s not found", resource),
+		Message:    fmt.Sprintf("Resource '%s' not found", resource),
 		err:        err,
 	}
 }
