@@ -62,9 +62,11 @@ func (s stripeService) PerformTransaction(input *models.TransactionInput) (*mode
 
 	result, err := s.client.PaymentIntents.New(params)
 	if err != nil {
-		if errors.As(err, &stripeErr) && stripeErr.Type != stripe.ErrorTypeCard {
-			return nil, api.NewInternalServerError(fmt.Errorf("performing transaction: %s", stripeErr.Code))
+		if errors.As(err, &stripeErr) && stripeErr.Type == stripe.ErrorTypeCard {
+			return parseFailedTransaction(stripeErr, transactionID), nil
 		}
+
+		return nil, api.NewInternalServerError(fmt.Errorf("performing transaction: %s", stripeErr.Code))
 	}
 
 	transaction := &models.Transaction{
@@ -81,12 +83,26 @@ func (s stripeService) PerformTransaction(input *models.TransactionInput) (*mode
 		},
 	}
 
-	if stripeErr != nil && stripeErr.Type == stripe.ErrorTypeCard {
-		transaction.Status = models.TransactionStatusFailure
-		transaction.FailureReason = string(stripeErr.Code)
+	return transaction, nil
+}
+
+func parseFailedTransaction(stripeErr *stripe.Error, transactionID string) *models.Transaction {
+	transaction := &models.Transaction{
+		TransactionID: transactionID,
+		Status:        models.TransactionStatusFailure,
+		FailureReason: string(stripeErr.Code),
+		Description:   stripeErr.PaymentIntent.Description,
+		Provider:      models.PaymentProviderStripe,
+		Amount:        int(stripeErr.PaymentIntent.Amount),
+		Currency:      string(stripeErr.PaymentIntent.Currency),
+		Type:          models.TransactionTypeCharge,
+		AdditionalFields: map[string]interface{}{
+			"charge_id":         stripeErr.PaymentIntent.LatestCharge.ID,
+			"payment_intent_id": stripeErr.PaymentIntent.ID,
+		},
 	}
 
-	return transaction, nil
+	return transaction
 }
 
 // RefundTransaction performs refund to payment processor

@@ -117,24 +117,23 @@ func TestPerformTransactionCardError(t *testing.T) {
 		Uploads: stripeBackendMock,
 	}
 
-	stripeErr := &stripe.Error{
-		Type: stripe.ErrorTypeCard,
-		Code: stripe.ErrorCodeCardDeclined,
+	mockPaymentIntentResult := stripe.PaymentIntent{
+		ID:          "payment_intent_id",
+		Description: expectedTransaction.Description,
+		Amount:      int64(expectedTransaction.Amount),
+		Currency:    stripe.Currency(expectedTransaction.Currency),
+		LatestCharge: &stripe.Charge{
+			ID: "charge_id",
+		},
 	}
 
-	stripeBackendMock.On("Call", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
-		mockPaymentIntentResult := args.Get(4).(*stripe.PaymentIntent)
+	stripeErr := &stripe.Error{
+		Type:          stripe.ErrorTypeCard,
+		Code:          stripe.ErrorCodeCardDeclined,
+		PaymentIntent: &mockPaymentIntentResult,
+	}
 
-		*mockPaymentIntentResult = stripe.PaymentIntent{
-			ID:          "payment_intent_id",
-			Description: expectedTransaction.Description,
-			Amount:      int64(expectedTransaction.Amount),
-			Currency:    stripe.Currency(expectedTransaction.Currency),
-			LatestCharge: &stripe.Charge{
-				ID: "charge_id",
-			},
-		}
-	}).Return(stripeErr)
+	stripeBackendMock.On("Call", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(stripeErr)
 
 	mockStripeClient := client.New("sk_test", stripeTestBackends)
 
