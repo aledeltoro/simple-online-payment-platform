@@ -5,7 +5,7 @@
 ### Ping
 
 <details>
- <summary><code>GET</code> <code><b>/</b></code> <code>(Check if the service is healthy)</code></summary>
+ <summary><code>GET</code> <code><b>/</b></code> <code>(Checks if the service is healthy)</code></summary>
 
 #### Parameters
 
@@ -23,10 +23,10 @@ Hello World!
 
 ### Create payment
 
-**Disclaimer**: When a new payment is created its initial status is intentionally set to `pending`. In order to mock use case where it takes X amount of time to charge a payment. Therefore, the final status will be given by the event receved by webhooks.
+**Disclaimer**: When a new payment is created its initial status is intentionally set to `pending`. In order to mock the use case where it takes X amount of time to charge a payment. Therefore, the final status will be given by the event received by webhooks.
 
 <details>
- <summary><code>POST</code> <code><b>/</b></code> <code>(creates a successful or unsuccessful payment, depending on the test card used)</code></summary>
+ <summary><code>POST</code> <code><b>/</b></code> <code>(Creates a successful or unsuccessful payment, depending on the test card used)</code></summary>
 
 #### Parameters
 
@@ -109,7 +109,7 @@ Failed payment
 
 > | name            |  type     | data type               | description                                              |
 > |-----------------|-----------|-------------------------|----------------------------------------------------------|
-> | id              |  required | string (path parameter) | Identifier to the gien transaction_id                    |
+> | id              |  required | string (path parameter) | Identifier to the given transaction_id                    |
 
 #### Responses
 
@@ -155,7 +155,7 @@ Failed payment
 
 ### Refund payment
 
-**Disclaimer**: When a payment is refunded its initial status is intentionally set to `pending`. In order to mock use case where it takes X amount of time to charge a payment. Therefore, the final status will be given by the event receved by webhooks.
+**Disclaimer**: When a payment is refunded its initial status is intentionally set to `pending`. In order to mock use case where it takes X amount of time to charge a payment. Therefore, the final status will be given by the event received by webhooks.
 
 <details>
  <summary><code>POST</code> <code><b>/{transaction_id}</b></code> <code>(Refunds a payment given its transaction_id)</code></summary>
@@ -164,7 +164,7 @@ Failed payment
 
 > | name            |  type     | data type               | description                                              |
 > |-----------------|-----------|-------------------------|----------------------------------------------------------|
-> | id              |  required | string (path parameter) | Identifier to the gien transaction_id                    |
+> | id              |  required | string (path parameter) | Identifier to the given transaction_id                    |
 
 #### Responses
 
@@ -211,12 +211,12 @@ Succesful refund
 
 </details>
 
-### Online Payment Webhooks
+## Online Payment Webhooks
 
 ### Ping
 
 <details>
- <summary><code>GET</code> <code><b>/</b></code> <code>(Check if the service is healthy)</code></summary>
+ <summary><code>GET</code> <code><b>/</b></code> <code>(Checks if the service is healthy)</code></summary>
 
 #### Parameters
 
