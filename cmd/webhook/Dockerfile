@@ -17,8 +17,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build -v -o /webhooks cmd/webhook/main.go
 # Run stage
 FROM alpine:3.19
 
-RUN ls
-
 COPY --from=build /webhooks /app/.env ./
 
 # Expose API port
