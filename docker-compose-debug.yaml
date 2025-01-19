@@ -21,9 +21,10 @@ services:
         condition: service_started
     build:
       context: ./
-      dockerfile: cmd/webhook/Dockerfile
+      dockerfile: cmd/webhook/Dockerfile.debug
     ports:
       - "3001:3001"
+      - "4001:4001"
     env_file:
       - .env
   stripe:
