@@ -1,0 +1,51 @@
+version: "3.8"
+
+services:
+  api:
+    depends_on:
+      postgres:
+        condition: service_healthy
+    build:
+      context: ./
+      dockerfile: cmd/api/Dockerfile.debug
+    ports:
+      - "3000:3000"
+      - "4000:4000"
+    env_file:
+      - .env
+  webhook:
+    depends_on:
+      postgres:
+        condition: service_healthy
+      stripe:
+        condition: service_started
+    build:
+      context: ./
+      dockerfile: cmd/webhook/Dockerfile
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env
+  stripe:
+    image: stripe/stripe-cli
+    command: "listen --api-key ${STRIPE_SECRET_KEY} --device-name stripe-cli --forward-to webhook:3001/payments/stripe/events"
+  postgres:
+    hostname: database
+    image: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./internal/database/database.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=payment_platform
+
+volumes:
+  pgdata:
