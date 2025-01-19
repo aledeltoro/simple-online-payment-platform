@@ -1,0 +1,30 @@
+# syntax=docker/dockerfile:1
+FROM golang:1.21-alpine AS build
+
+# Create work directory
+WORKDIR /app
+
+# Copy and install dependencies
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy API packages
+COPY . ./
+
+# Install debugger
+RUN CGO_ENABLED=0 go install -ldflags "-s -w -extldflags '-static'" github.com/go-delve/delve/cmd/dlv@latest
+
+# Build binary
+RUN CGO_ENABLED=0 GOOS=linux go build -v -o /webhooks cmd/webhook/main.go
+
+# Run stage
+FROM alpine:3.19
+
+COPY --from=build /webhooks /app/.env ./
+COPY --from=build /go/bin/dlv ./
+
+# Expose API port to debugger port
+EXPOSE 3001 4001
+
+# Executes Delves and teaches it how to run our app
+CMD [ "/dlv", "--listen=:4001", "--headless=true", "--log=true", "--accept-multiclient", "--api-version=2", "exec", "/webhooks" ]
