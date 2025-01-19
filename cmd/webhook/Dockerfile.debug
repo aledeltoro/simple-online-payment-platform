@@ -15,16 +15,16 @@ COPY . ./
 RUN CGO_ENABLED=0 go install -ldflags "-s -w -extldflags '-static'" github.com/go-delve/delve/cmd/dlv@latest
 
 # Build binary
-RUN CGO_ENABLED=0 GOOS=linux go build -gcflags "all=-N -l" -v -o /api cmd/api/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -v -o /webhooks cmd/webhook/main.go
 
 # Run stage
 FROM alpine:3.19
 
-COPY --from=build /api /app/.env ./
+COPY --from=build /webhooks /app/.env ./
 COPY --from=build /go/bin/dlv ./
 
 # Expose API port to debugger port
-EXPOSE 3000 4000
+EXPOSE 3001 4001
 
 # Executes Delves and teaches it how to run our app
-CMD [ "/dlv", "--listen=:4000", "--headless=true", "--log=true", "--accept-multiclient", "--api-version=2", "exec", "/api" ]
+CMD [ "/dlv", "--listen=:4001", "--headless=true", "--log=true", "--accept-multiclient", "--api-version=2", "exec", "/webhooks" ]
